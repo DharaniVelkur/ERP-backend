@@ -173,4 +173,56 @@ router.post('/checkout',authenticate, async(req, res) => {
     }
 })
 
+//delete a product from the cart user
+router.delete('/deleteproduct/:id',authenticate,async (req,res)=>{
+    let id=req.params.id;
+    try {
+        let user=await users.findOne({_id:req.userId});
+        if(user){
+        for(let i=0;i<user.carts.length;i++){
+            if(user.carts[i]._id===id){
+               user.carts.splice(i,1);
+               break;
+            }
+        }
+        user.save();
+    }
+    await res.status(200).json({status:200,user})
+
+    } catch (error) {
+        res.status(400).json({ error: "error occurred" });
+    }
+})
+
+
+//get all users
+router.get('/getallusers',authenticate,async (req,res)=>{
+    let allusers=await users.find();
+    if(allusers){
+        res.status(200).json({status:200,allusers});
+    }else{
+        res.status(400).json({error: "not found"});
+    }
+});
+
+//get all orders of all users
+router.get('/getallorders/:userId',authenticate,async (req,res)=>{
+    let userId=req.params.userId;
+    if(userId==="undefined"){
+        let allusers=await users.find();
+        let orders=[];
+        for(let i=0;i<allusers?.length;i++){
+        orders= orders.concat(allusers[i].orders);
+        }
+        res.status(200).json({status:200,orders});
+    }else{
+    let finduser=await users.findOne({_id:userId});
+    if(finduser){
+        let userorders=finduser.orders;
+        res.status(200).json({status:200,orders:userorders});
+    }
+  }
+    
+})
+
 module.exports = router;
